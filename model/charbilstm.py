@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 from overrides import overrides
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from torch.nn.utils.rnn import pack_padded_sequence
 
 
 class CharBiLSTM(nn.Module):
@@ -22,8 +22,10 @@ class CharBiLSTM(nn.Module):
         self.dropout = nn.Dropout(config.dropout).to(self.device)
         self.char_embeddings = nn.Embedding(self.char_size, self.char_emb_size)
         self.char_embeddings = self.char_embeddings.to(self.device)
-        self.char_lstm = nn.LSTM(self.char_emb_size, self.hidden // 2, num_layers=1, batch_first=True,
-                                 bidirectional=True).to(self.device)
+        self.char_rnn = nn.LSTM(
+            self.char_emb_size, self.hidden // 2,
+            num_layers=1, batch_first=True, bidirectional=True
+        ).to(self.device)
 
     @overrides
     def forward(self, char_seq_tensor: torch.Tensor, char_seq_len: torch.Tensor) -> torch.Tensor:
@@ -46,11 +48,11 @@ class CharBiLSTM(nn.Module):
         char_embeds = self.dropout(self.char_embeddings(sorted_seq_tensor))
         pack_input = pack_padded_sequence(char_embeds, sorted_seq_len, batch_first=True)
 
-        _, char_hidden = self.char_lstm(pack_input, None)  ###
-        ## char_hidden = (h_t, c_t)
+        _, char_hidden = self.char_rnn(pack_input, None)
+        # char_hidden = (h_t, c_t)
         #  char_hidden[0] = h_t = (2, batch_size, lstm_dimension)
         # char_rnn_out, _ = pad_packed_sequence(char_rnn_out)
-        ## transpose because the first dimension is num_direction x num-layer
+        # transpose because the first dimension is num_direction x num-layer
         hidden = char_hidden[0].transpose(1, 0).contiguous().view(batch_size * sent_len, 1, -1)
-        ### before view, the size is ( batch_size * sent_len, 2, lstm_dimension) 2 means 2 direciton..
+        # before view, the size is ( batch_size * sent_len, 2, lstm_dimension) 2 means 2 direciton..
         return hidden[recover_idx].view(batch_size, sent_len, -1)

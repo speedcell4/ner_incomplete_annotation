@@ -95,7 +95,7 @@ class Config:
         Read the pretrained word embeddings, return the complete embeddings and the embedding dimension
         :return:
         """
-        print("reading the pretraing embedding: %s" % (self.embedding_file))
+        print(f"reading the pretraing embedding: {self.embedding_file}")
         if self.embedding_file is None:
             print("pretrain embedding in None, using random embedding")
             return None, self.embedding_dim

@@ -2,16 +2,13 @@
 # @author: Allan
 #
 
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 from overrides import overrides
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from typing import Tuple
 
-from config import ContextEmb
-from config import START, STOP, PAD, log_sum_exp_pytorch
 from model.bilstm_encoder import BiLSTMEncoder
-from model.charbilstm import CharBiLSTM
 from model.linear_crf_inferencer import LinearCRF
 
 

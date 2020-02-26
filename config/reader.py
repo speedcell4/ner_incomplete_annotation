@@ -38,9 +38,9 @@ class Reader:
                     continue
                 word, label = line.split()
                 if self.digit2zero:
-                    word = re.sub('\d', '0', word)  # replace digit with 0.
+                    word = re.sub(r'\d', '0', word)  # replace digit with 0.
                 words.append(word)
                 self.vocab.add(word)
                 labels.append(label)
-        print("number of sentences: {}".format(len(insts)))
+        print(f"number of sentences: {len(insts)}")
         return insts

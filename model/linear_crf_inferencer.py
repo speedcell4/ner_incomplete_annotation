@@ -1,7 +1,8 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 from overrides import overrides
-from typing import Tuple
 
 from config import log_sum_exp_pytorch, START, STOP, PAD
 
@@ -59,17 +60,17 @@ class LinearCRF(nn.Module):
         alpha = torch.zeros(batch_size, seq_len, self.label_size).to(self.device)
 
         alpha[:, 0, :] = all_scores[:, 0, self.start_idx, :]
-        ## the first position of all labels = (the transition from start - > all labels) + current emission.
+        # the first position of all labels = (the transition from start - > all labels) + current emission.
 
         for word_idx in range(1, seq_len):
-            ## batch_size, self.label_size, self.label_size
+            # batch_size, self.label_size, self.label_size
             before_log_sum_exp = alpha[:, word_idx - 1, :] \
                                      .view(batch_size, self.label_size, 1) \
                                      .expand(batch_size, self.label_size, self.label_size) + \
                                  all_scores[:, word_idx, :, :]
             alpha[:, word_idx, :] = log_sum_exp_pytorch(before_log_sum_exp)
 
-        ### batch_size x label_size
+        # batch_size x label_size
         last_alpha = torch.gather(alpha, 1, word_seq_lens.view(batch_size, 1, 1)
                                   .expand(batch_size, 1, self.label_size) - 1).view(batch_size, self.label_size)
         last_alpha += self.transition[:, self.end_idx].view(1, self.label_size).expand(batch_size, self.label_size)
@@ -90,7 +91,7 @@ class LinearCRF(nn.Module):
         batchSize = all_scores.shape[0]
         sentLength = all_scores.shape[1]
 
-        ## all the scores to current labels: batch, seq_len, all_from_label?
+        # all the scores to current labels: batch, seq_len, all_from_label?
         currentTagScores = torch.gather(all_scores, 3,
                                         tags.view(batchSize, sentLength, 1, 1).expand(batchSize, sentLength,
                                                                                       self.label_size, 1)).view(
@@ -158,12 +159,12 @@ class LinearCRF(nn.Module):
         scores = all_scores
         # scoresRecord[:, 0, :] = self.getInitAlphaWithBatchSize(batchSize).view(batchSize, self.label_size)
         scoresRecord[:, 0, :] = scores[:, 0, self.start_idx,
-                                :]  ## represent the best current score from the start, is the best
+                                :]  # represent the best current score from the start, is the best
         if annotation_mask is not None:
             scoresRecord[:, 0, :] += annotation_mask[:, 0, :]
         idxRecord[:, 0, :] = startIds
         for wordIdx in range(1, sentLength):
-            ### scoresIdx: batch x from_label x to_label at current index.
+            # scoresIdx: batch x from_label x to_label at current index.
             scoresIdx = scoresRecord[:, wordIdx - 1, :] \
                             .view(batchSize, self.label_size, 1) \
                             .expand(batchSize, self.label_size, self.label_size) + \
@@ -173,7 +174,7 @@ class LinearCRF(nn.Module):
                     .view(batchSize, 1, self.label_size) \
                     .expand(batchSize, self.label_size, self.label_size)
 
-            idxRecord[:, wordIdx, :] = torch.argmax(scoresIdx, 1)  ## the best previous label idx to crrent labels
+            idxRecord[:, wordIdx, :] = torch.argmax(scoresIdx, 1)  # the best previous label idx to crrent labels
             scoresRecord[:, wordIdx, :] = torch.gather(scoresIdx, 1, idxRecord[:, wordIdx, :]
                                                        .view(batchSize, 1, self.label_size)) \
                 .view(batchSize, self.label_size)

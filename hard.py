@@ -31,7 +31,7 @@ def set_seed(opt, seed):
 
 
 def parse_arguments(parser):
-    ###Training Hyperparameters
+    # Training Hyperparameters
     parser.add_argument('--device', type=str, default="cpu", choices=['cpu', 'cuda:0', 'cuda:1', 'cuda:2'],
                         help="GPU/CPU devices")
     parser.add_argument('--seed', type=int, default=42, help="random seed")
@@ -56,7 +56,7 @@ def parse_arguments(parser):
     parser.add_argument('--num_outer_iterations', type=int, default=10,
                         help="Number of outer iterations for cross validation")
 
-    ##model hyperparameter
+    # model hyperparameter
     parser.add_argument('--model_folder', type=str, default="english_model", help="The name to save the model files")
     parser.add_argument('--hidden_dim', type=int, default=200, help="hidden size of the LSTM")
     parser.add_argument('--dropout', type=float, default=0.5, help="dropout for embedding")
@@ -114,7 +114,7 @@ def train_model(config: Config, train_insts: List[List[Instance]], dev_insts: Li
             model.load_state_dict(torch.load(model_name))
             hard_constraint_predict(config=config, model=model,
                                     fold_batches=train_batches[1 - fold_id],
-                                    folded_insts=train_insts[1 - fold_id])  ## set a new label id
+                                    folded_insts=train_insts[1 - fold_id])  # set a new label id
         print("\n\n")
 
         print("[Training Info] Training the final model")
@@ -145,7 +145,7 @@ def hard_constraint_predict(config: Config, model: NNCRF, fold_batches: List[Tup
     model.eval()
     for batch in fold_batches:
         one_batch_insts = folded_insts[batch_id * batch_size:(batch_id + 1) * batch_size]
-        batch_max_scores, batch_max_ids = model.decode(batch)
+        _, batch_max_ids = model.decode(batch)
         batch_max_ids = batch_max_ids.cpu().numpy()
         word_seq_lens = batch[1].cpu().numpy()
         for idx in range(len(batch_max_ids)):
@@ -192,7 +192,7 @@ def train_one(config: Config, train_batches: List[Tuple], dev_insts: List[Instan
             if test_insts is not None:
                 saved_test_metrics = test_metrics
             torch.save(model.state_dict(), model_name)
-            # # Save the corresponding config as well.
+            # Save the corresponding config as well.
             if config_name:
                 f = open(config_name, 'wb')
                 pickle.dump(config, f)
@@ -207,7 +207,7 @@ def train_one(config: Config, train_batches: List[Tuple], dev_insts: List[Instan
 
 
 def evaluate_model(config: Config, model: NNCRF, batch_insts_ids, name: str, insts: List[Instance]):
-    ## evaluation
+    # evaluation
     metrics = np.asarray([0, 0, 0], dtype=int)
     batch_id = 0
     batch_size = config.batch_size

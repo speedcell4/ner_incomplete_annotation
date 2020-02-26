@@ -79,7 +79,7 @@ class BiLSTMEncoder(nn.Module):
         packed_words = pack_padded_sequence(sorted_seq_tensor, sorted_seq_len, True)
         lstm_out, _ = self.lstm(packed_words, None)
         lstm_out, _ = pad_packed_sequence(lstm_out, batch_first=True)
-        ## CARE: make sure here is batch_first, otherwise need to transpose.
+        # CARE: make sure here is batch_first, otherwise need to transpose.
         feature_out = self.drop_lstm(lstm_out)
 
         outputs = self.hidden2tag(feature_out)

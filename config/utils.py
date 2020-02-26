@@ -1,11 +1,11 @@
-import numpy as np
 import pickle
 import random
+from typing import List, Tuple, Set
+
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from termcolor import colored
-from typing import List, Tuple, Set
+from torch import optim
 
 from common import Instance, Span
 from config import PAD, ContextEmb, Config
@@ -90,11 +90,11 @@ def simple_batching(config, insts: List[Instance]) -> Tuple:
             annotation_mask[idx, word_seq_len[idx]:, :] = 1
 
         for word_idx in range(word_seq_len[idx]):
-            char_seq_tensor[idx, word_idx, :char_seq_len[idx, word_idx]] = torch.LongTensor(
-                batch_data[idx].char_ids[word_idx])
+            char_seq_tensor[idx, word_idx, :char_seq_len[idx, word_idx]] = \
+                torch.LongTensor(batch_data[idx].char_ids[word_idx])
         for wordIdx in range(word_seq_len[idx], max_seq_len):
-            char_seq_tensor[idx, wordIdx, 0: 1] = torch.LongTensor([config.char2idx[
-                                                                        PAD]])  ###because line 119 makes it 1, every single character should have a id. but actually 0 is enough
+            char_seq_tensor[idx, wordIdx, 0: 1] = torch.LongTensor([config.char2idx[PAD]])
+            # because line 119 makes it 1, every single character should have a id. but actually 0 is enough
 
     word_seq_tensor = word_seq_tensor.to(config.device)
     label_seq_tensor = label_seq_tensor.to(config.device)
@@ -143,13 +143,13 @@ def get_optimizer(config: Config, model: nn.Module):
     params = model.parameters()
     if config.optimizer.lower() == "sgd":
         print(
-            colored("Using SGD: lr is: {}, L2 regularization is: {}".format(config.learning_rate, config.l2), 'yellow'))
+            colored(f"Using SGD: lr is: {config.learning_rate}, L2 regularization is: {config.l2}", 'yellow'))
         return optim.SGD(params, lr=config.learning_rate, weight_decay=float(config.l2))
     elif config.optimizer.lower() == "adam":
         print(colored("Using Adam", 'yellow'))
         return optim.Adam(params)
     else:
-        print("Illegal optimizer: {}".format(config.optimizer))
+        print(f"Illegal optimizer: {config.optimizer}")
         exit(1)
 
 
@@ -161,7 +161,7 @@ def write_results(filename: str, insts):
             output = inst.output
             prediction = inst.prediction
             assert len(output) == len(prediction)
-            f.write("{}\t{}\t{}\t{}\n".format(i, words[i], output[i], prediction[i]))
+            f.write(f"{i}\t{words[i]}\t{output[i]}\t{prediction[i]}\n")
         f.write("\n")
     f.close()
 
