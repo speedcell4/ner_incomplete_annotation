@@ -2,15 +2,16 @@
 # @author: Allan
 #
 
-from tqdm import tqdm
-from common import Sentence, Instance
-from typing import List
 import re
+from tqdm import tqdm
+from typing import List
+
+from common import Sentence, Instance
 
 
 class Reader:
 
-    def __init__(self, digit2zero:bool=True):
+    def __init__(self, digit2zero: bool = True):
         """
         Read the dataset into Instance
         :param digit2zero: convert the digits into 0, which is a common practice for LSTM-CRF.
@@ -37,12 +38,9 @@ class Reader:
                     continue
                 word, label = line.split()
                 if self.digit2zero:
-                    word = re.sub('\d', '0', word) # replace digit with 0.
+                    word = re.sub('\d', '0', word)  # replace digit with 0.
                 words.append(word)
                 self.vocab.add(word)
                 labels.append(label)
         print("number of sentences: {}".format(len(insts)))
         return insts
-
-
-

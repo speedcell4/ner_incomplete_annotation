@@ -1,5 +1,4 @@
 class Span:
-
     def __init__(self, left: int, right: int, type: str, inst_id: int = None):
         self.left = left
         self.right = right
@@ -18,4 +17,3 @@ class Span:
             return hash((self.left, self.right, self.type))
         else:
             return hash((self.inst_id, self.left, self.right, self.type))
-

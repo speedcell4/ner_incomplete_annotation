@@ -1,6 +1,7 @@
-
 from typing import List
+
 from common.sentence import Sentence
+
 
 class Instance:
 
@@ -25,4 +26,3 @@ class Instance:
 
     def __len__(self) -> int:
         return len(self.input)
-

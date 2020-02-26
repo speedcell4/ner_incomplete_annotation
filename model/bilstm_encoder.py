@@ -1,12 +1,11 @@
-
 import torch
 import torch.nn as nn
+from overrides import overrides
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from config import ContextEmb
 from model.charbilstm import CharBiLSTM
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from overrides import overrides
 
 class BiLSTMEncoder(nn.Module):
 
@@ -28,30 +27,32 @@ class BiLSTMEncoder(nn.Module):
             self.char_feature = CharBiLSTM(config, print_info=print_info)
             self.input_size += config.charlstm_hidden_dim
 
-        self.word_embedding = nn.Embedding.from_pretrained(torch.FloatTensor(config.word_embedding), freeze=False).to(self.device)
+        self.word_embedding = nn.Embedding.from_pretrained(torch.FloatTensor(config.word_embedding), freeze=False).to(
+            self.device)
         self.word_drop = nn.Dropout(config.dropout).to(self.device)
 
         if print_info:
-            print("[Model Info] Input size to LSTM: {}".format(self.input_size))
-            print("[Model Info] LSTM Hidden Size: {}".format(config.hidden_dim))
+            print(f"[Model Info] Input size to LSTM: {self.input_size}")
+            print(f"[Model Info] LSTM Hidden Size: {config.hidden_dim}")
 
-        self.lstm = nn.LSTM(self.input_size, config.hidden_dim // 2, num_layers=1, batch_first=True, bidirectional=True).to(self.device)
+        self.lstm = nn.LSTM(self.input_size, config.hidden_dim // 2, num_layers=1, batch_first=True,
+                            bidirectional=True).to(self.device)
 
         self.drop_lstm = nn.Dropout(config.dropout).to(self.device)
 
         final_hidden_dim = config.hidden_dim
 
         if print_info:
-            print("[Model Info] Final Hidden Size: {}".format(final_hidden_dim))
+            print(f"[Model Info] Final Hidden Size: {final_hidden_dim}")
 
         self.hidden2tag = nn.Linear(final_hidden_dim, self.label_size).to(self.device)
 
     @overrides
     def forward(self, word_seq_tensor: torch.Tensor,
-                       word_seq_lens: torch.Tensor,
-                       batch_context_emb: torch.Tensor,
-                       char_inputs: torch.Tensor,
-                       char_seq_lens: torch.Tensor) -> torch.Tensor:
+                word_seq_lens: torch.Tensor,
+                batch_context_emb: torch.Tensor,
+                char_inputs: torch.Tensor,
+                char_seq_lens: torch.Tensor) -> torch.Tensor:
         """
         Encoding the input with BiLSTM
         :param word_seq_tensor: (batch_size, sent_len)   NOTE: The word seq actually is already ordered before come here.
@@ -71,18 +72,16 @@ class BiLSTMEncoder(nn.Module):
 
         word_rep = self.word_drop(word_emb)
 
-
         sorted_seq_len, permIdx = word_seq_lens.sort(0, descending=True)
         _, recover_idx = permIdx.sort(0, descending=False)
         sorted_seq_tensor = word_rep[permIdx]
 
         packed_words = pack_padded_sequence(sorted_seq_tensor, sorted_seq_len, True)
         lstm_out, _ = self.lstm(packed_words, None)
-        lstm_out, _ = pad_packed_sequence(lstm_out, batch_first=True)  ## CARE: make sure here is batch_first, otherwise need to transpose.
+        lstm_out, _ = pad_packed_sequence(lstm_out, batch_first=True)
+        ## CARE: make sure here is batch_first, otherwise need to transpose.
         feature_out = self.drop_lstm(lstm_out)
 
         outputs = self.hidden2tag(feature_out)
 
         return outputs[recover_idx]
-
-
